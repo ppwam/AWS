@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Hub & System Monitor</title>
+    
+    <!-- Google Fonts: Outfit & Inter for high-end typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Premium glowing background accents -->
+    <div class="glow-blob blob-purple"></div>
+    <div class="glow-blob blob-blue"></div>
+    <div class="glow-blob blob-teal"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div>
+                    <h1>Workspace Hub</h1>
+                    <p class="subtitle">System Realtime Performance Monitor</p>
+                </div>
+            </div>
+            
+            <div class="header-status">
+                <div class="status-indicator">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span class="status-text" id="statusText">連線正常</span>
+                </div>
+                <div class="time-display" id="timeDisplay">--:--:--</div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+            
+            <!-- Resource Cards (Grid of 3 Metrics) -->
+            <section class="metrics-container">
+                <!-- CPU Card -->
+                <div class="glass-card metric-card" id="cpuCard">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon cpu-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cpu"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 15h3"/><path d="M1 9h3"/><path d="M1 15h3"/></svg>
+                            </div>
+                            <h3>中央處理器</h3>
+                        </div>
+                        <span class="badge badge-purple" id="cpuCores">-- Cores</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="value-display">
+                            <span class="main-val" id="cpuPercent">0.0</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <!-- Linear Progress Bar -->
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill fill-purple" id="cpuProgress" style="width: 0%"></div>
+                        </div>
+                        <div class="card-footer-info">
+                            <span>負載狀態</span>
+                            <span class="status-desc" id="cpuStatusDesc">讀取中</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memory Card -->
+                <div class="glass-card metric-card" id="memCard">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon mem-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                            </div>
+                            <h3>記憶體</h3>
+                        </div>
+                        <span class="badge badge-blue" id="memTotal">-- GB</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="value-display">
+                            <span class="main-val" id="memPercent">0.0</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill fill-blue" id="memProgress" style="width: 0%"></div>
+                        </div>
+                        <div class="card-footer-info">
+                            <span id="memUsageText">已使用 -- GB</span>
+                            <span class="status-desc" id="memStatusDesc">剩餘 -- GB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disk Card -->
+                <div class="glass-card metric-card" id="diskCard">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon disk-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hard-drive"><rect width="20" height="8" x="2" y="3" rx="2"/><rect width="20" height="8" x="2" y="13" rx="2"/><path d="M6 7h.01"/><path d="M6 17h.01"/></svg>
+                            </div>
+                            <h3>儲存空間</h3>
+                        </div>
+                        <span class="badge badge-teal" id="diskTotal">-- GB</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="value-display">
+                            <span class="main-val" id="diskPercent">0.0</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill fill-teal" id="diskProgress" style="width: 0%"></div>
+                        </div>
+                        <div class="card-footer-info">
+                            <span id="diskUsageText">已使用 -- GB</span>
+                            <span class="status-desc" id="diskStatusDesc">剩餘 -- GB</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Detailed Server Info Column (Left Column bottom) -->
+            <section class="side-panel">
+                <div class="glass-card info-card">
+                    <div class="card-header border-bottom">
+                        <div class="card-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-server text-teal"><rect width="20" height="8" x="2" y="3" rx="2"/><rect width="20" height="8" x="2" y="13" rx="2"/><path d="M6 7h.01"/><path d="M6 17h.01"/></svg>
+                            <h3>伺服器詳細資訊</h3>
+                        </div>
+                    </div>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">作業系統</span>
+                            <span class="info-value" id="osName">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Python 版本</span>
+                            <span class="info-value" id="pythonVersion">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">伺服器埠口</span>
+                            <span class="info-value text-glow">19191</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">系統運行時間</span>
+                            <span class="info-value text-purple font-mono" id="serverUptime">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card shortcut-card">
+                    <div class="card-header border-bottom">
+                        <div class="card-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link text-purple"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                            <h3>快速連結</h3>
+                        </div>
+                    </div>
+                    <div class="shortcut-buttons">
+                        <a href="/api/stats" target="_blank" class="shortcut-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-terminal"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+                            <span>系統 API 端點</span>
+                        </a>
+                        <a href="/api/notes" target="_blank" class="shortcut-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-open"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
+                            <span>便簽 API 端點</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workspace Hub Notes Manager (Right Column) -->
+            <section class="notes-panel">
+                <div class="glass-card notes-card">
+                    <div class="card-header border-bottom">
+                        <div class="card-title">
+                            <div class="card-icon notes-title-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-list"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                            </div>
+                            <h3>工作區記事本</h3>
+                        </div>
+                        <span class="notes-count" id="notesCount">0 則紀錄</span>
+                    </div>
+                    
+                    <!-- Note input form -->
+                    <div class="notes-input-area">
+                        <form id="noteForm" class="note-form">
+                            <input type="text" id="noteInput" placeholder="輸入新的工作記事或靈感..." required maxlength="100">
+                            <button type="submit" class="submit-btn" aria-label="Add note">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v19"/></svg>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Notes list container -->
+                    <div class="notes-list-scroll">
+                        <div class="notes-list" id="notesList">
+                            <!-- Loading state -->
+                            <div class="empty-state">
+                                <div class="spinner"></div>
+                                <p>正在加載記事本數據...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+        
+        <!-- Footer -->
+        <footer class="app-footer-bar">
+            <p>© 2026 Workspace Dashboard. Running on Python Flask server.</p>
+        </footer>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

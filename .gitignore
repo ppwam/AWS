@@ -1,0 +1,17 @@
+# Python transient files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Development databases & notes test data
+data/
+test/test_notes.json
+
+# IDE config files
+.idea/
+.vscode/
