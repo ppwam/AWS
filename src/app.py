@@ -1,6 +1,6 @@
 import os
 from flask import Flask, jsonify, render_template, request
-from src.utils import SystemStats, NoteManager
+from src.utils import SystemStats, NoteManager, StockManager, CompanyScheduleManager
 
 # Initialize the Flask application
 # Explicitly set static and template folders to be within 'src'
@@ -61,5 +61,33 @@ def delete_note(note_id):
             return jsonify({"status": "success", "message": "Note deleted successfully"}), 200
         else:
             return jsonify({"status": "error", "message": "Note not found"}), 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/feature1')
+def feature1():
+    """Render the Taiwan limit up stocks page (Feature 1)."""
+    return render_template('feature1.html')
+
+@app.route('/feature2')
+def feature2():
+    """Render the afternoon office company page (Feature 2)."""
+    return render_template('feature2.html')
+
+@app.route('/api/feature1', methods=['GET'])
+def get_feature1_data():
+    """API endpoint returning Taiwan limit up stocks."""
+    try:
+        data = StockManager.get_limit_up_stocks()
+        return jsonify({"status": "success", "data": data}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/feature2', methods=['GET'])
+def get_feature2_data():
+    """API endpoint returning companies active in the afternoon."""
+    try:
+        data = CompanyScheduleManager.get_afternoon_companies()
+        return jsonify({"status": "success", "data": data}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500

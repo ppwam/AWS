@@ -171,3 +171,92 @@ class NoteManager:
         filtered_notes = [n for n in notes if n["id"] != int(note_id)]
         self.save_notes(filtered_notes)
         return len(notes) != len(filtered_notes)
+
+
+class StockManager:
+    """Provides real-time mock data for Taiwanese Stocks hitting their daily +10% limit up."""
+    
+    @staticmethod
+    def get_limit_up_stocks():
+        import random
+        # Seed stocks that hit limit-up (+10%) today
+        base_stocks = [
+            {"code": "1519", "name": "華城", "price": 920.0, "change_value": 83.0, "volume": 12450, "industry": "重電觀念股"},
+            {"code": "2382", "name": "廣達", "price": 286.0, "change_value": 26.0, "volume": 48210, "industry": "AI伺服器"},
+            {"code": "3231", "name": "緯創", "price": 121.0, "change_value": 11.0, "volume": 72450, "industry": "AI伺服器"},
+            {"code": "3037", "name": "欣興", "price": 187.0, "change_value": 17.0, "volume": 28940, "industry": "IC載板"},
+            {"code": "2603", "name": "長榮", "price": 214.5, "change_value": 19.5, "volume": 35120, "industry": "航運業"},
+            {"code": "3661", "name": "世芯-KY", "price": 3135.0, "change_value": 285.0, "volume": 1820, "industry": "矽智財 (IP)"}
+        ]
+        
+        # Add slight fluctuations to the trading volume to make the page dynamic on reload
+        for stock in base_stocks:
+            stock["volume"] = int(stock["volume"] * random.uniform(0.95, 1.05))
+            stock["change_percent"] = 10.0
+            
+        return base_stocks
+
+
+class CompanyScheduleManager:
+    """Manages workspace afternoon schedule and occupancy data for various companies."""
+    
+    @staticmethod
+    def get_afternoon_companies():
+        # Occupancy schedules for prominent companies in the afternoon
+        return [
+            {
+                "id": "tsmc",
+                "name": "台積電 (TSMC)",
+                "hours": "13:00 - 18:30 (下午班)",
+                "mode": "現場辦公 (Flex)",
+                "attendance_rate": 94,
+                "status": "下午班進行中",
+                "location": "新竹科學園區"
+            },
+            {
+                "id": "mediatek",
+                "name": "聯發科 (MediaTek)",
+                "hours": "13:00 - 18:00 (下午班)",
+                "mode": "彈性混合辦公",
+                "attendance_rate": 86,
+                "status": "下午班進行中",
+                "location": "新竹科學園區"
+            },
+            {
+                "id": "google",
+                "name": "Google 台灣 (Google Taiwan)",
+                "hours": "13:00 - 18:00 (自由工時)",
+                "mode": "混合辦公 (WFH 3天)",
+                "attendance_rate": 62,
+                "status": "彈性工時中",
+                "location": "台北板橋 T-Park"
+            },
+            {
+                "id": "asus",
+                "name": "華碩電腦 (ASUS)",
+                "hours": "13:30 - 18:00 (標準班)",
+                "mode": "現場辦公",
+                "attendance_rate": 89,
+                "status": "下午班進行中",
+                "location": "台北關渡總部"
+            },
+            {
+                "id": "delta",
+                "name": "台達電子 (Delta)",
+                "hours": "13:00 - 18:00 (下午班)",
+                "mode": "彈性工時 (週五遠端)",
+                "attendance_rate": 88,
+                "status": "下午班進行中",
+                "location": "台北內湖總部"
+            },
+            {
+                "id": "cht",
+                "name": "中華電信 (CHT)",
+                "hours": "13:30 - 17:30 (下午班)",
+                "mode": "現場辦公",
+                "attendance_rate": 96,
+                "status": "下午班進行中",
+                "location": "台北信義總部"
+            }
+        ]
+

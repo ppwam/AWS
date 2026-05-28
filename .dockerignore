@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Test files
+test/
+
+# Docker files themselves
+Dockerfile
+.dockerignore
