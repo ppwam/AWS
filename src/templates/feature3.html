@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3 雲端檔案儲存 | Workspace Hub</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Premium glowing background accents -->
+    <div class="glow-blob blob-purple"></div>
+    <div class="glow-blob blob-blue"></div>
+    <div class="glow-blob blob-teal"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div>
+                    <h1>Workspace Hub</h1>
+                    <p class="subtitle">System Realtime Performance Monitor</p>
+                </div>
+            </div>
+
+            <!-- Multi-tab Navigation Bar -->
+            <nav class="app-nav">
+                <a href="/" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    <span>系統監控</span>
+                </a>
+                <a href="/feature1" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                    <span>台股漲停看板</span>
+                </a>
+                <a href="/feature2" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-building-2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M6 18h12"/><path d="M6 14h12"/><path d="M6 10h12"/><path d="M6 6h12"/></svg>
+                    <span>下午上班公司</span>
+                </a>
+                <a href="/feature3" class="nav-item active">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-upload"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                    <span>S3 雲端上傳</span>
+                </a>
+            </nav>
+            
+            <div class="header-status">
+                <div class="status-indicator">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span class="status-text" id="statusText">連線正常</span>
+                </div>
+                <div class="time-display" id="timeDisplay">--:--:--</div>
+            </div>
+        </header>
+
+        <!-- Main Feature 3 Layout -->
+        <main class="single-panel-layout">
+            
+            <!-- Connection Status Tutorial / Notice Banner -->
+            <div class="glass-card status-banner-card {% if is_configured %}status-s3-active{% else %}status-s3-simulated{% endif %}" id="s3StatusBanner">
+                <div class="banner-icon-container">
+                    {% if is_configured %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-teal"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+                    {% endif %}
+                </div>
+                <div class="banner-text-content">
+                    <h3>S3 雲端儲存狀態：<span id="s3ModeText">{% if is_configured %}AWS 實體連線中{% else %}本地模擬測試中 (Simulated Mode){% endif %}</span></h3>
+                    <p class="subtitle" id="s3ModeDesc">
+                        {% if is_configured %}
+                            成功連接至儲存桶 <strong>{{ bucket_name }}</strong>。您的檔案已安全保存於 AWS 雲端中。
+                        {% else %}
+                            未檢測到 AWS 憑證，系統已啟用<strong>本機隔離儲存模擬</strong>。檔案將安全寫入 <code>data/s3_mock/</code> 目錄。
+                        {% endif %}
+                    </p>
+                </div>
+                {% if not is_configured %}
+                <div class="banner-action-area">
+                    <button class="shortcut-btn" onclick="toggleSetupGuide()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-help-circle"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                        <span>設定教學</span>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Setup Guide Panel (Hidden by default) -->
+            <div class="glass-card guide-panel-card hidden" id="setupGuidePanel">
+                <div class="card-header border-bottom">
+                    <div class="card-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg>
+                        <h3>如何安全設定 AWS S3 連線</h3>
+                    </div>
+                    <button class="delete-btn" onclick="toggleSetupGuide()" aria-label="Close guide">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="card-body setup-guide-body">
+                    <p>為遵循<strong>「不在程式碼中硬編碼金鑰」</strong>的安全最佳實踐，請在啟動本系統前，在您的系統環境變數中設定以下金鑰，本程式會自動安全偵測：</p>
+                    
+                    <div class="code-instructions">
+                        <h4>Windows PowerShell 設定指令</h4>
+                        <pre><code>$env:AWS_ACCESS_KEY_ID="您的_AWS_ACCESS_KEY_ID"
+$env:AWS_SECRET_ACCESS_KEY="您的_AWS_SECRET_ACCESS_KEY"
+$env:AWS_DEFAULT_REGION="us-east-1"
+python run.py</code></pre>
+
+                        <h4>Windows CMD (命令提示字元) 設定指令</h4>
+                        <pre><code>set AWS_ACCESS_KEY_ID=您的_AWS_ACCESS_KEY_ID
+set AWS_SECRET_ACCESS_KEY=您的_AWS_SECRET_ACCESS_KEY
+set AWS_DEFAULT_REGION=us-east-1
+python run.py</code></pre>
+                    </div>
+                    <p class="tip-text">ℹ️ 您的 AWS 帳號或角色必須擁有對儲存桶 <code>bucket-for-hoodini</code> 的 <code>s3:PutObject</code>、<code>s3:ListBucket</code> 及 <code>s3:DeleteObject</code> 讀寫權限。</p>
+                </div>
+            </div>
+
+            <!-- Upload Dashboard Panels Grid (Left Dropzone, Right Uploaded Files List) -->
+            <div class="feature-two-column-layout">
+                
+                <!-- Left Column: Dropzone & Active Uploads -->
+                <div class="upload-controls-section">
+                    <div class="glass-card feature-container upload-card">
+                        <div class="card-header border-bottom">
+                            <div class="card-title">
+                                <div class="card-icon mem-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-upload"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                                </div>
+                                <div>
+                                    <h2>檔案拖曳上傳</h2>
+                                    <p class="subtitle">拖曳檔案至下方區域或點擊選取，即可秒級傳輸至 S3</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body upload-body-area">
+                            <!-- Drag and Drop Dropzone -->
+                            <div class="upload-dropzone" id="uploadDropzone">
+                                <input type="file" id="fileInput" class="file-input-hidden" multiple>
+                                <div class="dropzone-content">
+                                    <div class="cloud-glow-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-cloud text-purple"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                                    </div>
+                                    <h3>將檔案拖曳至此處</h3>
+                                    <p class="subtitle">支援單個或多個檔案選取，單檔案上限 50MB</p>
+                                    <button class="shortcut-btn select-files-btn">
+                                        <span>瀏覽本地檔案</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Upload Active Progress Area -->
+                            <div class="active-uploads-container hidden" id="activeUploadsContainer">
+                                <h4 class="section-subtitle">檔案上傳進度</h4>
+                                <div class="active-uploads-list" id="activeUploadsList">
+                                    <!-- Dynamic Progress Items go here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: S3 Bucket File Browser -->
+                <div class="files-browser-section">
+                    <div class="glass-card feature-container files-list-card">
+                        <div class="card-header border-bottom">
+                            <div class="card-title">
+                                <div class="card-icon disk-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-open"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
+                                </div>
+                                <div>
+                                    <h2>儲存桶檔案瀏覽器</h2>
+                                    <p class="subtitle">儲存桶：<span class="text-glow text-purple font-mono">{{ bucket_name }}</span></p>
+                                </div>
+                            </div>
+                            
+                            <button class="shortcut-btn refresh-btn" id="refreshS3Files">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                                <span>重新整理</span>
+                            </button>
+                        </div>
+
+                        <div class="table-scroll-container">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>檔案名稱</th>
+                                        <th>檔案大小</th>
+                                        <th>最後修改時間</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="s3FilesTableBody">
+                                    <!-- Dynamic rows go here -->
+                                    <tr>
+                                        <td colspan="4">
+                                            <div class="empty-state">
+                                                <div class="spinner"></div>
+                                                <p>正在加載儲存桶檔案清單...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer-bar">
+            <p>© 2026 Workspace Dashboard. Running on Python Flask server.</p>
+        </footer>
+    </div>
+
+    <!-- Script to toggle the tutorial guide -->
+    <script>
+        function toggleSetupGuide() {
+            const panel = document.getElementById('setupGuidePanel');
+            panel.classList.toggle('hidden');
+        }
+    </script>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

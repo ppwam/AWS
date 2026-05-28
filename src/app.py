@@ -1,6 +1,6 @@
 import os
 from flask import Flask, jsonify, render_template, request
-from src.utils import SystemStats, NoteManager, StockManager, CompanyScheduleManager
+from src.utils import SystemStats, NoteManager, StockManager, CompanyScheduleManager, S3Manager
 
 # Initialize the Flask application
 # Explicitly set static and template folders to be within 'src'
@@ -91,3 +91,47 @@ def get_feature2_data():
         return jsonify({"status": "success", "data": data}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/feature3')
+def feature3():
+    """Render the S3 Upload dashboard page (Feature 3)."""
+    return render_template('feature3.html', bucket_name=S3Manager.BUCKET_NAME, is_configured=S3Manager.is_aws_configured())
+
+@app.route('/api/feature3/files', methods=['GET'])
+def get_s3_files():
+    """API endpoint to list files from S3 or mock local folder."""
+    try:
+        res = S3Manager.list_files()
+        return jsonify(res), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/feature3/upload', methods=['POST'])
+def upload_s3_file():
+    """API endpoint to upload a file."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"status": "error", "message": "No file part in the request"}), 400
+            
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"status": "error", "message": "No selected file"}), 400
+            
+        filename = file.filename
+        res = S3Manager.upload_file(file, filename)
+        
+        status_code = 200 if res["status"] == "success" else 500
+        return jsonify(res), status_code
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/feature3/delete/<path:filename>', methods=['DELETE'])
+def delete_s3_file(filename):
+    """API endpoint to delete a file."""
+    try:
+        res = S3Manager.delete_file(filename)
+        status_code = 200 if res["status"] == "success" else 500
+        return jsonify(res), status_code
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+

@@ -260,3 +260,184 @@ class CompanyScheduleManager:
             }
         ]
 
+
+class S3Manager:
+    """Manages secure interactions with AWS S3 and provides local mock fallback."""
+    
+    BUCKET_NAME = "bucket-for-hoodini"
+    
+    @staticmethod
+    def is_aws_configured():
+        """Check if AWS credentials are set in the environment or config."""
+        try:
+            import boto3
+            session = boto3.Session()
+            creds = session.get_credentials()
+            return creds is not None and creds.access_key is not None
+        except Exception:
+            return False
+
+    @staticmethod
+    def get_s3_client():
+        """Initialize and return a boto3 S3 client."""
+        import boto3
+        # No hardcoded access key or secret key!
+        # Automatically detects from environment variables or ~/.aws/credentials
+        return boto3.client('s3', region_name=os.getenv('AWS_DEFAULT_REGION', 'ap-east-2'))
+
+    @staticmethod
+    def upload_file(file_obj, filename):
+        """Upload a file to S3 or local mock directory."""
+        # Reset file stream pointer to the beginning to ensure full readability
+        try:
+            file_obj.seek(0)
+        except Exception:
+            pass
+
+        if S3Manager.is_aws_configured():
+            try:
+                s3 = S3Manager.get_s3_client()
+                # Upload the underlying stream object to S3
+                s3.upload_fileobj(file_obj.stream, S3Manager.BUCKET_NAME, filename)
+                return {
+                    "status": "success",
+                    "mode": "s3",
+                    "filename": filename,
+                    "message": "File successfully uploaded to AWS S3!"
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "mode": "s3",
+                    "message": f"AWS S3 Upload failed: {str(e)}"
+                }
+        else:
+            # Local Simulated Mock Mode
+            try:
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                mock_dir = os.path.join(base_dir, 'data', 's3_mock')
+                os.makedirs(mock_dir, exist_ok=True)
+                
+                # Save file locally
+                filepath = os.path.join(mock_dir, filename)
+                file_obj.save(filepath)
+                
+                return {
+                    "status": "success",
+                    "mode": "simulated",
+                    "filename": filename,
+                    "message": "AWS credentials not detected. Saved in Simulated Mode locally."
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "mode": "simulated",
+                    "message": f"Simulated local save failed: {str(e)}"
+                }
+
+    @staticmethod
+    def list_files():
+        """List files in the S3 bucket or local mock directory."""
+        if S3Manager.is_aws_configured():
+            try:
+                s3 = S3Manager.get_s3_client()
+                response = s3.list_objects_v2(Bucket=S3Manager.BUCKET_NAME)
+                
+                files = []
+                if 'Contents' in response:
+                    for obj in response['Contents']:
+                        files.append({
+                            "name": obj['Key'],
+                            "size_bytes": obj['Size'],
+                            "last_modified": obj['LastModified'].strftime("%Y-%m-%d %H:%M:%S")
+                        })
+                return {
+                    "status": "success",
+                    "mode": "s3",
+                    "files": files
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "mode": "s3",
+                    "message": f"Failed to list S3 bucket contents: {str(e)}",
+                    "files": []
+                }
+        else:
+            # Local Simulated Mock Mode
+            try:
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                mock_dir = os.path.join(base_dir, 'data', 's3_mock')
+                os.makedirs(mock_dir, exist_ok=True)
+                
+                files = []
+                for entry in os.scandir(mock_dir):
+                    if entry.is_file():
+                        stat = entry.stat()
+                        files.append({
+                            "name": entry.name,
+                            "size_bytes": stat.st_size,
+                            "last_modified": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                        })
+                
+                # Sort descending by last modified
+                files.sort(key=lambda x: x["last_modified"], reverse=True)
+                return {
+                    "status": "success",
+                    "mode": "simulated",
+                    "files": files
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "mode": "simulated",
+                    "message": f"Failed to list local simulated files: {str(e)}",
+                    "files": []
+                }
+
+    @staticmethod
+    def delete_file(filename):
+        """Delete a file from S3 or local mock directory."""
+        if S3Manager.is_aws_configured():
+            try:
+                s3 = S3Manager.get_s3_client()
+                s3.delete_object(Bucket=S3Manager.BUCKET_NAME, Key=filename)
+                return {
+                    "status": "success",
+                    "mode": "s3",
+                    "message": "File successfully deleted from AWS S3!"
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "mode": "s3",
+                    "message": f"AWS S3 delete failed: {str(e)}"
+                }
+        else:
+            # Local Simulated Mock Mode
+            try:
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                mock_dir = os.path.join(base_dir, 'data', 's3_mock')
+                filepath = os.path.join(mock_dir, filename)
+                
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                    return {
+                        "status": "success",
+                        "mode": "simulated",
+                        "message": "File successfully deleted from local simulated storage!"
+                    }
+                else:
+                    return {
+                        "status": "error",
+                        "mode": "simulated",
+                        "message": "File not found in simulated storage."
+                    }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "mode": "simulated",
+                    "message": f"Simulated delete failed: {str(e)}"
+                }
+
+

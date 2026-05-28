@@ -746,3 +746,416 @@ body {
     color: var(--text-muted);
     font-weight: 500;
 }
+
+
+/* ==========================================================================
+   Feature 3: S3 Cloud Upload Page Styles
+   ========================================================================== */
+
+/* Two-column layout */
+.feature-two-column-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1.8fr;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+    .feature-two-column-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Feature single-panel container */
+.single-panel-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.feature-container {
+    padding: 1.75rem 2rem;
+    min-height: 480px;
+}
+
+/* Connection Status Banner */
+.status-banner-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 2rem;
+    border-radius: var(--border-radius-lg);
+    background: var(--card-bg);
+}
+
+.status-s3-active {
+    border-left: 4px solid var(--teal);
+    box-shadow: 0 4px 20px rgba(20, 184, 166, 0.1);
+}
+
+.status-s3-simulated {
+    border-left: 4px solid var(--purple);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+}
+
+.banner-icon-container {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.banner-text-content {
+    flex-grow: 1;
+}
+
+.banner-text-content h3 {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.banner-action-area {
+    flex-shrink: 0;
+}
+
+/* Guide panel */
+.guide-panel-card {
+    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guide-panel-card.hidden {
+    display: none !important;
+}
+
+.setup-guide-body {
+    padding: 1.25rem 1.5rem 1.5rem 1.5rem !important;
+}
+
+.setup-guide-body p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.code-instructions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .code-instructions {
+        grid-template-columns: 1fr;
+    }
+}
+
+.code-instructions h4 {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.code-instructions pre {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--card-border);
+    border-radius: var(--border-radius-md);
+    padding: 0.85rem;
+    overflow-x: auto;
+}
+
+.code-instructions code {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: #e2e8f0;
+    line-height: 1.4;
+}
+
+.tip-text {
+    font-size: 0.75rem;
+    color: var(--text-muted) !important;
+}
+
+/* Upload Dropzone Container */
+.upload-body-area {
+    padding: 1.25rem 0 0 0 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.upload-dropzone {
+    background: rgba(255, 255, 255, 0.01);
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-lg);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-dropzone.dragover {
+    border-color: var(--purple);
+    background: rgba(139, 92, 246, 0.04);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.1) inset;
+}
+
+.file-input-hidden {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+
+.cloud-glow-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(139, 92, 246, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(139, 92, 246, 0.1);
+    margin-bottom: 0.25rem;
+    transition: var(--transition-smooth);
+}
+
+.upload-dropzone:hover .cloud-glow-icon {
+    transform: scale(1.08) translateY(-4px);
+    background: rgba(139, 92, 246, 0.1);
+    box-shadow: 0 6px 24px rgba(139, 92, 246, 0.2);
+}
+
+.select-files-btn {
+    pointer-events: auto;
+    margin-top: 0.5rem;
+}
+
+/* Active uploads progress container */
+.active-uploads-container {
+    animation: fadeIn 0.3s ease;
+}
+
+.section-subtitle {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.active-uploads-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.progress-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-radius: var(--border-radius-md);
+    padding: 0.75rem 1rem;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.progress-filename {
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;
+}
+
+.progress-percentage {
+    font-weight: 600;
+    color: var(--purple);
+}
+
+/* Premium Table Styling (For Feature 1 and Feature 3) */
+.table-scroll-container {
+    overflow-y: auto;
+    max-height: 480px;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.table-scroll-container::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+}
+
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.85rem;
+}
+
+.glass-table th {
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-family: var(--font-heading);
+    position: sticky;
+    top: 0;
+    background: #11111d;
+    z-index: 10;
+}
+
+.glass-table td {
+    padding: 0.85rem 1.25rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    vertical-align: middle;
+}
+
+.glass-table tbody tr {
+    transition: var(--transition-smooth);
+}
+
+.glass-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.glass-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Inline status labels in tables */
+.table-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.table-badge-success {
+    background: rgba(20, 184, 166, 0.1);
+    color: var(--teal);
+}
+
+.table-badge-simulated {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--purple);
+}
+
+.empty-table-text {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Company grid items (Feature 2) styling */
+.companies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.company-card {
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.company-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.company-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.company-location {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+.company-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.company-detail-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.825rem;
+}
+
+.company-detail-label {
+    color: var(--text-secondary);
+}
+
+.company-detail-val {
+    font-weight: 600;
+}
+
+.attendance-progress-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.attendance-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(to right, #60a5fa, var(--blue));
+}
+
