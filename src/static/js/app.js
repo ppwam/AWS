@@ -868,6 +868,318 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+    // ==========================================================================
+    // PAGE 5: Feature 4 - Concurrent Users & CPU Spike Simulator
+    // ==========================================================================
+    const userSlider = document.getElementById('userSlider');
+    if (userSlider) {
+        const toggleSimulationBtn = document.getElementById('toggleSimulationBtn');
+        const userCountBadge = document.getElementById('userCountBadge');
+        const hardwareStressToggle = document.getElementById('hardwareStressToggle');
+        
+        const loadStatusBanner = document.getElementById('loadStatusBanner');
+        const loadBannerIcon = document.getElementById('loadBannerIcon');
+        const loadStatusText = document.getElementById('loadStatusText');
+        const loadStatusDesc = document.getElementById('loadStatusDesc');
+        
+        const rpsValue = document.getElementById('rpsValue');
+        const terminalConsole = document.getElementById('terminalConsole');
+        const trafficChart = document.getElementById('trafficChart');
+        
+        let simulationActive = false;
+        let activeUsersCount = 500;
+        let logInterval = null;
+        let chartInterval = null;
+        let chartData = Array(30).fill(0); // 30 data points
+
+        // Initialize State from Backend
+        async function initSimulationState() {
+            try {
+                const response = await fetch('/api/simulate-load');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.active) {
+                        simulationActive = true;
+                        activeUsersCount = result.users || 500;
+                        
+                        // Update UI controls
+                        userSlider.value = activeUsersCount;
+                        userCountBadge.textContent = `${activeUsersCount.toLocaleString()} Users`;
+                        hardwareStressToggle.checked = result.hardware_stress || false;
+                        
+                        // Apply Overloaded visual state
+                        toggleSimulationBtn.classList.add('active');
+                        toggleSimulationBtn.querySelector('span').textContent = '停止流量暴衝模擬';
+                        toggleSimulationBtn.querySelector('svg').innerHTML = '<rect width="14" height="14" x="5" y="5" rx="1"/>';
+                        
+                        loadStatusBanner.className = 'glass-card status-banner-card status-overloaded';
+                        loadBannerIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>';
+                        loadStatusText.textContent = '系統超載中！(Critical Overload)';
+                        loadStatusDesc.innerHTML = `⚠️ 警告！超過 <strong>${activeUsersCount.toLocaleString()}</strong> 名併發用戶集體灌爆伺服器，CPU 資源已經完全耗盡！`;
+                        
+                        appendTerminalLine(`[SYSTEM] 偵測到背景負載模擬仍在運作中，即時還原控制台狀態...`, 'text-warning');
+                        
+                        startSimulatedLogs();
+                        startChartAnimation();
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to initialize simulation state", err);
+            }
+        }
+        
+        initSimulationState();
+        
+        // Slider Change Listener
+        userSlider.addEventListener('input', (e) => {
+            activeUsersCount = parseInt(e.target.value);
+            userCountBadge.textContent = `${activeUsersCount.toLocaleString()} Users`;
+            
+            if (simulationActive) {
+                // Instantly update backend simulation users
+                updateBackendSimulation();
+                appendTerminalLine(`[INFO] 併發訪問人數調整為 ${activeUsersCount} 人。即時吞吐量調整中...`, 'text-warning');
+            }
+        });
+
+        // Toggle Simulation Click Listener
+        toggleSimulationBtn.addEventListener('click', async () => {
+            simulationActive = !simulationActive;
+            
+            if (simulationActive) {
+                // Start Simulation
+                toggleSimulationBtn.classList.add('active');
+                toggleSimulationBtn.querySelector('span').textContent = '停止流量暴衝模擬';
+                toggleSimulationBtn.querySelector('svg').innerHTML = '<rect width="14" height="14" x="5" y="5" rx="1"/>'; // Stop icon
+                
+                loadStatusBanner.className = 'glass-card status-banner-card status-overloaded';
+                loadBannerIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>';
+                loadStatusText.textContent = '系統超載中！(Critical Overload)';
+                loadStatusDesc.innerHTML = `⚠️ 警告！超過 <strong>${activeUsersCount.toLocaleString()}</strong> 名併發用戶集體灌爆伺服器，CPU 資源已經完全耗盡！`;
+                
+                appendTerminalLine(`[ALERT] 2026-05-29 ${new Date().toLocaleTimeString()} - 檢測到併發流量突增！來源 IP: 集體分散式，請求頻率飆升！`, 'text-danger');
+                appendTerminalLine(`[SYSTEM] CPU 核心溫度急遽上升，執行緒池隊列飽和！`, 'text-warning');
+                
+                startSimulatedLogs();
+                startChartAnimation();
+            } else {
+                // Stop Simulation
+                toggleSimulationBtn.classList.remove('active');
+                toggleSimulationBtn.querySelector('span').textContent = '啟動流量暴衝模擬';
+                toggleSimulationBtn.querySelector('svg').innerHTML = '<polygon points="6 3 20 12 6 21 6 3"/>'; // Play icon
+                
+                loadStatusBanner.className = 'glass-card status-banner-card status-s3-active';
+                loadStatusBanner.style.borderLeftColor = 'var(--teal)';
+                loadBannerIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-teal"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+                loadStatusText.textContent = '正常運作 (Normal)';
+                loadStatusDesc.textContent = '目前系統存取流量正常，硬體運作流暢無阻塞。';
+                
+                appendTerminalLine(`[INFO] 2026-05-29 ${new Date().toLocaleTimeString()} - 流量模擬關閉。系統重置，CPU 負載正回落至正常水位。`, 'text-teal');
+                
+                stopSimulatedLogs();
+                stopChartAnimation();
+                rpsValue.textContent = '0';
+            }
+            
+            await updateBackendSimulation();
+        });
+
+        // Hardware stress check listener
+        hardwareStressToggle.addEventListener('change', () => {
+            if (simulationActive) {
+                updateBackendSimulation();
+                if (hardwareStressToggle.checked) {
+                    appendTerminalLine(`[HARDWARE] 啟動實體主機 CPU 壓力熔爐！後端將啟動真實的運算燃燒執行緒...`, 'text-danger');
+                } else {
+                    appendTerminalLine(`[HARDWARE] 關閉實體主機真實運算。後端壓力釋放。`, 'text-teal');
+                }
+            }
+        });
+
+        async function updateBackendSimulation() {
+            try {
+                await fetch('/api/simulate-load', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        active: simulationActive,
+                        users: activeUsersCount,
+                        hardware_stress: hardwareStressToggle.checked
+                    })
+                });
+            } catch (err) {
+                console.error("Failed to update backend simulation", err);
+            }
+        }
+
+        // Terminal Console helper
+        function appendTerminalLine(text, className = '') {
+            const line = document.createElement('div');
+            line.className = `terminal-line ${className}`;
+            line.textContent = text;
+            terminalConsole.appendChild(line);
+            
+            while (terminalConsole.children.length > 100) {
+                terminalConsole.removeChild(terminalConsole.firstChild);
+            }
+            terminalConsole.scrollTop = terminalConsole.scrollHeight;
+        }
+
+        // Generate Fake Network logs
+        function startSimulatedLogs() {
+            stopSimulatedLogs();
+            
+            const logTemplates = [
+                () => `[WARNING] 併發線程數達到臨界值！當前活耀併發線程: ${(activeUsersCount * 0.12).toFixed(0)}`,
+                () => `[CRITICAL] CPU Core ${Math.floor(Math.random() * 4)} 負載超過 98.2%！系統電壓調整中...`,
+                () => `[ALERT] 拒絕服務防禦啟動：丟棄來自疑似攻擊源的無效請求包。`,
+                () => `[INFO] Nginx 反向代理負載均衡中... RPS 吞吐量: ${(activeUsersCount * 2.4 + Math.random() * 200).toFixed(0)} req/s`,
+                () => `[SYSTEM] 內存快取命中率降低至 ${(70 - Math.random() * 15).toFixed(1)}%。磁碟 I/O 頻繁！`,
+                () => `[WARNING] 資料庫連接池資源飽和！當前佔用排隊: ${Math.floor(Math.random() * 50)} 筆。`,
+            ];
+
+            const dangerTemplates = [
+                () => `[DANGER] ⚠️ 伺服器核心溫度過熱警告！${(82 + Math.random() * 10).toFixed(1)}°C！`,
+                () => `[DANGER] ⚠️ 請求佇列（Request Queue）溢出！丟棄最新請求。`,
+            ];
+
+            logInterval = setInterval(() => {
+                const now = new Date().toLocaleTimeString();
+                let logText = "";
+                let colorClass = "";
+                
+                const rand = Math.random();
+                if (rand < 0.6) {
+                    logText = logTemplates[Math.floor(Math.random() * logTemplates.length)]();
+                    colorClass = logText.includes('CRITICAL') ? 'text-danger' : (logText.includes('WARNING') ? 'text-warning' : '');
+                } else if (rand < 0.85) {
+                    logText = dangerTemplates[Math.floor(Math.random() * dangerTemplates.length)]();
+                    colorClass = 'text-danger';
+                } else {
+                    logText = `[SUCCESS] 200 OK - 反應時間 ${(300 + Math.random() * 1800).toFixed(0)}ms - API 伺服器成功吞吐流量。`;
+                    colorClass = 'text-teal';
+                }
+                
+                appendTerminalLine(`[${now}] ${logText}`, colorClass);
+            }, 600 + Math.random() * 800);
+        }
+
+        function stopSimulatedLogs() {
+            if (logInterval) {
+                clearInterval(logInterval);
+                logInterval = null;
+            }
+        }
+
+        // Draw Live Canvas Line Chart
+        let ctx = trafficChart.getContext('2d');
+        
+        function drawChart() {
+            ctx.clearRect(0, 0, trafficChart.width, trafficChart.height);
+            
+            const width = trafficChart.clientWidth;
+            const height = trafficChart.clientHeight;
+            trafficChart.width = width;
+            trafficChart.height = height;
+
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 4; i++) {
+                let y = (height / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+
+            // Draw gradient area
+            let gradient = ctx.createLinearGradient(0, 0, 0, height);
+            if (simulationActive) {
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
+                gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(20, 184, 166, 0.2)');
+                gradient.addColorStop(1, 'rgba(20, 184, 166, 0.0)');
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+
+            const step = width / (chartData.length - 1);
+            const maxVal = simulationActive ? 30000 : 1000;
+            
+            for (let i = 0; i < chartData.length; i++) {
+                let valRatio = chartData[i] / maxVal;
+                let x = i * step;
+                let y = height - (valRatio * height * 0.8) - 10;
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.lineTo(width, height);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw line
+            ctx.beginPath();
+            ctx.strokeStyle = simulationActive ? '#f43f5e' : 'var(--teal)';
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = simulationActive ? 'rgba(239, 68, 68, 0.5)' : 'rgba(20, 184, 166, 0.5)';
+            
+            for (let i = 0; i < chartData.length; i++) {
+                let valRatio = chartData[i] / maxVal;
+                let x = i * step;
+                let y = height - (valRatio * height * 0.8) - 10;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset shadow
+        }
+
+        // Initialize static chart
+        drawChart();
+        window.addEventListener('resize', drawChart);
+
+        function startChartAnimation() {
+            stopChartAnimation();
+            
+            chartInterval = setInterval(() => {
+                let rps = 0;
+                if (simulationActive) {
+                    rps = Math.floor(activeUsersCount * 2.2 + (Math.random() - 0.5) * activeUsersCount * 0.4);
+                } else {
+                    rps = Math.floor(Math.random() * 20);
+                }
+                
+                rpsValue.textContent = rps.toLocaleString();
+                chartData.shift();
+                chartData.push(rps);
+                drawChart();
+            }, 500);
+        }
+
+        function stopChartAnimation() {
+            if (chartInterval) {
+                clearInterval(chartInterval);
+                chartInterval = null;
+            }
+            let resetSteps = 0;
+            let resetInterval = setInterval(() => {
+                chartData.shift();
+                chartData.push(0);
+                drawChart();
+                resetSteps++;
+                if (resetSteps >= 30) clearInterval(resetInterval);
+            }, 50);
+        }
+    }
+
+
     // --- Helper to escape HTML characters ---
     function escapeHtml(text) {
         if (!text) return '';

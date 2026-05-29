@@ -14,6 +14,9 @@ except ImportError:
 class SystemStats:
     """Helper class to retrieve system performance and info metrics."""
     
+    simulated_cpu_spike = False
+    simulated_users = 0
+    
     @staticmethod
     def get_uptime():
         """Retrieve system uptime."""
@@ -109,6 +112,13 @@ class SystemStats:
             stats["disk"]["percent"] = 62.4
             stats["disk"]["used_gb"] = round((stats["disk"]["total_gb"] * stats["disk"]["percent"]) / 100.0, 2)
             stats["disk"]["free_gb"] = round(stats["disk"]["total_gb"] - stats["disk"]["used_gb"], 2)
+
+        if SystemStats.simulated_cpu_spike:
+            import random
+            stats["cpu"]["percent"] = min(100.0, round(94.0 + random.uniform(-2.0, 4.0), 1))
+            stats["memory"]["percent"] = min(99.0, round(stats["memory"]["percent"] * 1.6, 1))
+            stats["memory"]["used_gb"] = round((stats["memory"]["total_gb"] * stats["memory"]["percent"]) / 100.0, 2)
+            stats["memory"]["free_gb"] = round(stats["memory"]["total_gb"] - stats["memory"]["used_gb"], 2)
 
         return stats
 
@@ -439,5 +449,40 @@ class S3Manager:
                     "mode": "simulated",
                     "message": f"Simulated delete failed: {str(e)}"
                 }
+
+
+import threading
+
+class CPUStressThread(threading.Thread):
+    def __init__(self, duration=30):
+        super().__init__()
+        self.duration = duration
+        self.stop_event = threading.Event()
+
+    def run(self):
+        import time
+        start_time = time.time()
+        while time.time() - start_time < self.duration and not self.stop_event.is_set():
+            for _ in range(50000):
+                _ = 42 * 42
+            time.sleep(0.001)
+
+class StressManager:
+    active_threads = []
+    
+    @staticmethod
+    def start_stress(duration=30, threads_count=4):
+        StressManager.stop_stress()
+        for _ in range(threads_count):
+            t = CPUStressThread(duration=duration)
+            t.daemon = True
+            t.start()
+            StressManager.active_threads.append(t)
+            
+    @staticmethod
+    def stop_stress():
+        for t in StressManager.active_threads:
+            t.stop_event.set()
+        StressManager.active_threads.clear()
 
 
