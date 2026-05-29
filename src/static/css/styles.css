@@ -1159,3 +1159,98 @@ body {
     background: linear-gradient(to right, #60a5fa, var(--blue));
 }
 
+/* --- Hello World Flash Button & Overlay Styles --- */
+.flash-trigger-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.flash-trigger-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+    background: linear-gradient(135deg, #9d76fa, #4e91fc);
+}
+
+.flash-trigger-btn:active {
+    transform: translateY(1px);
+}
+
+.flash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 15, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flash-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.flash-content {
+    background: rgba(20, 20, 35, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    padding: 3rem 6rem;
+    text-align: center;
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    transform: scale(0.7) translateY(30px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.flash-overlay.active .flash-content {
+    transform: scale(1) translateY(0);
+}
+
+.flash-text {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #ffffff, #c084fc, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+    filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6));
+    animation: textPulse 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes textPulse {
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6));
+    }
+    100% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.8));
+    }
+}
+
+

@@ -355,6 +355,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initialize notes list
         fetchNotes();
+
+        // --- Hello World Flash Feature ---
+        const flashBtn = document.getElementById('flashBtn');
+        const flashOverlay = document.getElementById('flashOverlay');
+        if (flashBtn && flashOverlay) {
+            flashBtn.addEventListener('click', () => {
+                // Show overlay container
+                flashOverlay.classList.remove('hidden');
+                
+                // Force layout reflow so transition plays properly
+                void flashOverlay.offsetWidth;
+                
+                // Trigger active animation
+                flashOverlay.classList.add('active');
+                
+                // Hide after 0.8 seconds
+                setTimeout(() => {
+                    flashOverlay.classList.remove('active');
+                    
+                    // Hide completely after transition finishes
+                    setTimeout(() => {
+                        flashOverlay.classList.add('hidden');
+                    }, 180);
+                }, 800);
+            });
+        }
     }
 
 
