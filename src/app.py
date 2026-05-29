@@ -156,13 +156,13 @@ def simulate_load():
             SystemStats.simulated_users = users
             
             if active and hardware_stress:
-                # Start actual backend multi-core stress for 30s
-                StressManager.start_stress(duration=30, threads_count=4)
+                # Start actual backend multi-core stress indefinitely
+                StressManager.start_stress(users_count=users)
             else:
                 # Stop any running stress threads
                 StressManager.stop_stress()
                 
-        actual_stress = len(StressManager.active_threads) > 0
+        actual_stress = len(StressManager.active_processes) > 0
         
         return jsonify({
             "status": "success",

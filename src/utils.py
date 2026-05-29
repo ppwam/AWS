@@ -451,38 +451,105 @@ class S3Manager:
                 }
 
 
-import threading
+import multiprocessing
+import gc
 
-class CPUStressThread(threading.Thread):
-    def __init__(self, duration=30):
-        super().__init__()
-        self.duration = duration
-        self.stop_event = threading.Event()
+# Global reference to keep memory from being garbage collected
+_memory_hog = []
 
-    def run(self):
-        import time
-        start_time = time.time()
-        while time.time() - start_time < self.duration and not self.stop_event.is_set():
-            for _ in range(50000):
-                _ = 42 * 42
-            time.sleep(0.001)
+def cpu_burner_process(stop_event):
+    """Target function for burning a CPU core without holding the GIL of the main process."""
+    import time
+    while not stop_event.is_set():
+        # Intense busy loop without any sleep to fully consume the core
+        x = 0
+        for _ in range(5000000):
+            x += 1
+        time.sleep(0.001)
 
 class StressManager:
-    active_threads = []
+    active_processes = []
+    manager = None
+    stop_event = None
     
     @staticmethod
-    def start_stress(duration=30, threads_count=4):
+    def start_stress(users_count=500):
+        # Always clean up existing stress first
         StressManager.stop_stress()
-        for _ in range(threads_count):
-            t = CPUStressThread(duration=duration)
-            t.daemon = True
-            t.start()
-            StressManager.active_threads.append(t)
+        
+        # 1. CPU Burning using multiprocessing (to bypass GIL and hog multiple cores)
+        try:
+            import os
+            cpu_count = os.cpu_count() or 4
+        except Exception:
+            cpu_count = 4
+            
+        # Determine how many cores to stress based on simulated users count
+        cores_to_stress = max(1, min(cpu_count, int(cpu_count * (users_count / 10000.0))))
+        
+        try:
+            # We use multiprocessing Manager to share a stop event across processes
+            StressManager.manager = multiprocessing.Manager()
+            StressManager.stop_event = StressManager.manager.Event()
+            
+            for _ in range(cores_to_stress):
+                p = multiprocessing.Process(target=cpu_burner_process, args=(StressManager.stop_event,))
+                p.daemon = True
+                p.start()
+                StressManager.active_processes.append(p)
+        except Exception as e:
+            print("Failed to start CPU stress processes:", e)
+            
+        # 2. RAM Allocation
+        # Allocate RAM based on user slider (e.g. up to 2.5 GB)
+        try:
+            mb_to_allocate = int(2560 * (users_count / 10000.0))
+            mb_to_allocate = max(50, min(3000, mb_to_allocate)) # Clamp between 50MB and 3GB
+            
+            global _memory_hog
+            _memory_hog.clear()
+            
+            chunk_size = 50 * 1024 * 1024 # 50 MB
+            chunks_count = mb_to_allocate // 50
+            
+            for _ in range(chunks_count):
+                chunk = bytearray(chunk_size)
+                # Force Windows to actually commit pages to physical RAM
+                chunk[0] = 1
+                chunk[-1] = 1
+                _memory_hog.append(chunk)
+                
+        except Exception as e:
+            print("Failed to allocate RAM:", e)
             
     @staticmethod
     def stop_stress():
-        for t in StressManager.active_threads:
-            t.stop_event.set()
-        StressManager.active_threads.clear()
+        # Stop CPU processes
+        if StressManager.stop_event:
+            try:
+                StressManager.stop_event.set()
+            except Exception:
+                pass
+            StressManager.stop_event = None
+            
+        for p in StressManager.active_processes:
+            try:
+                p.terminate()
+                p.join(timeout=0.1)
+            except Exception:
+                pass
+        StressManager.active_processes.clear()
+        
+        if StressManager.manager:
+            try:
+                StressManager.manager.shutdown()
+            except Exception:
+                pass
+            StressManager.manager = None
+            
+        # Free memory and trigger garbage collector
+        global _memory_hog
+        _memory_hog.clear()
+        gc.collect()
 
 
