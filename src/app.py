@@ -1,6 +1,6 @@
 import os
 from flask import Flask, jsonify, render_template, request
-from src.utils import SystemStats, NoteManager, StockManager, CompanyScheduleManager, S3Manager
+from src.utils import SystemStats, NoteManager, StockManager, CompanyScheduleManager, S3Manager, StressManager
 
 # Initialize the Flask application
 # Explicitly set static and template folders to be within 'src'
@@ -132,6 +132,45 @@ def delete_s3_file(filename):
         res = S3Manager.delete_file(filename)
         status_code = 200 if res["status"] == "success" else 500
         return jsonify(res), status_code
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/feature4')
+def feature4():
+    """Render the high concurrent traffic and CPU spike simulator page (Feature 4)."""
+    return render_template('feature4.html')
+
+
+@app.route('/api/simulate-load', methods=['GET', 'POST'])
+def simulate_load():
+    """API endpoint to start/stop or retrieve high load and hardware CPU stress testing state."""
+    try:
+        if request.method == 'POST':
+            data = request.get_json() or {}
+            active = data.get('active', False)
+            users = int(data.get('users', 0))
+            hardware_stress = data.get('hardware_stress', False)
+            
+            SystemStats.simulated_cpu_spike = active
+            SystemStats.simulated_users = users
+            
+            if active and hardware_stress:
+                # Start actual backend multi-core stress indefinitely
+                StressManager.start_stress(users_count=users)
+            else:
+                # Stop any running stress threads
+                StressManager.stop_stress()
+                
+        actual_stress = len(StressManager.active_processes) > 0
+        
+        return jsonify({
+            "status": "success",
+            "active": SystemStats.simulated_cpu_spike,
+            "users": SystemStats.simulated_users,
+            "hardware_stress": actual_stress,
+            "message": "Simulation configuration successfully processed."
+        }), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

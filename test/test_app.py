@@ -200,3 +200,38 @@ def test_feature3_api_lifecycle(client):
     finally:
         S3Manager.is_aws_configured = original_configured
 
+
+def test_feature4_page(client):
+    """Test that the CPU Simulator page (Feature 4) renders correctly."""
+    response = client.get('/feature4')
+    assert response.status_code == 200
+    assert b'CPU' in response.data
+
+
+def test_api_simulate_load(client):
+    """Test that the load simulation API correctly updates status and overrides stats."""
+    # 1. Trigger simulation activation
+    payload = {"active": True, "users": 8500, "hardware_stress": False}
+    response = client.post('/api/simulate-load',
+                           data=json.dumps(payload),
+                           content_type='application/json')
+    assert response.status_code == 200
+    res_data = json.loads(response.data)
+    assert res_data['status'] == 'success'
+    assert res_data['active'] is True
+    assert res_data['users'] == 8500
+    
+    # 2. Check that the SystemStats.get_stats() output is overridden
+    stats_response = client.get('/api/stats')
+    assert stats_response.status_code == 200
+    stats_data = json.loads(stats_response.data)
+    assert stats_data['status'] == 'success'
+    assert stats_data['data']['cpu']['percent'] >= 90.0
+    
+    # 3. Disable simulation activation
+    payload = {"active": False, "users": 0, "hardware_stress": False}
+    response = client.post('/api/simulate-load',
+                           data=json.dumps(payload),
+                           content_type='application/json')
+    assert response.status_code == 200
+
